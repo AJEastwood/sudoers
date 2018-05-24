@@ -1,7 +1,16 @@
 ---
+##
+# Parse hostnames to grab 1st 2 characters
+##
 - set_fact: parhost={{ ansible_hostname[0:2] }}
 
+##
+# Enclose in block so we can use parhost to exclude hosts
+##
 - block:
+   ##
+   # Validate will prevent bad files, no need to revert
+   ##
    - name: Ensure sudoers file
      copy:
        src: sudoers
@@ -13,6 +22,9 @@
        validate: /usr/sbin/visudo -cf %s
      register: sudochg
 
+   ##
+   # Ensure line is added to desired hosts
+   ##
    - name: Ensure sudoers.d include
      lineinfile:
        path: /etc/sudoers
@@ -22,7 +34,6 @@
 
    - name: sudoers checksum
      shell: "cksum /etc/sudoers >> {{ MD5FILE }}"
-     changed_when: false
      when: sudochg.changed
 
    - name: Ensure MD5FILE permissions
@@ -32,5 +43,8 @@
        group: root
        mode: 0600
        state: file
+  ##
+  # This conditional restricts what hosts this block runs on
+  ##
   when: parhost != 'la'
 ...

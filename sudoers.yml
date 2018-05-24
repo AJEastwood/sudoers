@@ -1,4 +1,8 @@
 ---
+##
+# Role playbook
+##
+
 - hosts: all
   roles:
     - sudoers
