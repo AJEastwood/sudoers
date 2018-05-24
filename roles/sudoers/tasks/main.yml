@@ -4,6 +4,12 @@
 ##
 - set_fact: parhost={{ ansible_hostname[0:2] }}
 
+- set_fact: csbin=csum
+  when: ansible_distribution == 'AIX'
+
+- set_fact: csbin=cksum
+  when: ansible_distribution == 'RedHat'
+
 ##
 # Enclose in block so we can use parhost to exclude hosts
 ##
@@ -33,7 +39,7 @@
      when: sudochg.changed and parhost == INCLUDE
 
    - name: sudoers checksum
-     shell: "cksum /etc/sudoers >> {{ MD5FILE }}"
+     shell: "{{ csbin }}/etc/sudoers >> {{ MD5FILE }}"
      when: sudochg.changed
 
    - name: Ensure MD5FILE permissions
