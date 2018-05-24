@@ -38,7 +38,7 @@
        path: /etc/sudoers
        line: '#includedir /etc/sudoers.d'
        validate: /usr/sbin/visudo -cf %s
-     when: sudochg.changed and parhost == INCLUDE
+     when: parhost == INCLUDE
 
    - name: sudoers checksum
      shell: "{{ csbin }} /etc/sudoers >> {{ MD5FILE }}"
