@@ -18,10 +18,11 @@
 - block:
    ##
    # Validate will prevent bad files, no need to revert
+   # Jinja2 template will add include line
    ##
    - name: Ensure sudoers file
-     copy:
-       src: sudoers
+     template:
+       src: sudoers.j2
        dest: /etc/sudoers
        owner: root
        group: root
@@ -29,16 +30,6 @@
        backup: yes
        validate: /usr/sbin/visudo -cf %s
      register: sudochg
-
-   ##
-   # Ensure line is added to desired hosts
-   ##
-   - name: Ensure sudoers.d include
-     lineinfile:
-       path: /etc/sudoers
-       line: '#includedir /etc/sudoers.d'
-       validate: /usr/sbin/visudo -cf %s
-     when: parhost == INCLUDE
 
    - name: sudoers checksum
      shell: "{{ csbin }} /etc/sudoers >> {{ MD5FILE }}"
