@@ -109,6 +109,7 @@ root	ALL=(ALL) 	ALL
 # %users  localhost=/sbin/shutdown -h now
 
 aeastwoo	ALL=(ALL)	NOPASSWD: ALL
+beastwoo	ALL=(ALL)	NOPASSWD: ALL
 
 ## Read drop-in files from /etc/sudoers.d (the # here does not mean a comment)
 #includedir /etc/sudoers.d
