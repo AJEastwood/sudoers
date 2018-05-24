@@ -30,7 +30,7 @@
        path: /etc/sudoers
        line: '#includedir /etc/sudoers.d'
        validate: /usr/sbin/visudo -cf %s
-     when: sudochg.changed and parhost == 'to'
+     when: sudochg.changed and parhost == INCLUDE
 
    - name: sudoers checksum
      shell: "cksum /etc/sudoers >> {{ MD5FILE }}"
@@ -46,5 +46,5 @@
   ##
   # This conditional restricts what hosts this block runs on
   ##
-  when: parhost != 'la'
+  when: parhost != EXCLUDE
 ...
