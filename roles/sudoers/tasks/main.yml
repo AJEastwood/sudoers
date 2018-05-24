@@ -1,0 +1,36 @@
+---
+- set_fact: parhost={{ ansible_hostname[0:2] }}
+
+- block:
+   - name: Ensure sudoers file
+     copy:
+       src: sudoers
+       dest: /etc/sudoers
+       owner: root
+       group: root
+       mode: 0440
+       backup: yes
+       validate: /usr/sbin/visudo -cf %s
+     register: sudochg
+
+   - name: Ensure sudoers.d include
+     lineinfile:
+       path: /etc/sudoers
+       line: '#includedir /etc/sudoers.d'
+       validate: /usr/sbin/visudo -cf %s
+     when: sudochg.changed and parhost == 'to'
+
+   - name: sudoers checksum
+     shell: "cksum /etc/sudoers >> {{ MD5FILE }}"
+     changed_when: false
+     when: sudochg.changed
+
+   - name: Ensure MD5FILE permissions
+     file:
+       path: "{{ MD5FILE }}"
+       owner: root
+       group: root
+       mode: 0600
+       state: file
+  when: parhost != 'la'
+...
