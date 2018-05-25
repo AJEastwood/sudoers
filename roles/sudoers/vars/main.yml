@@ -1,7 +1,3 @@
-##
-# Set location of sudoers checksum file
-##
-
 MD5FILE: /root/.sudoer.md5
 
 EXCLUDE: la
