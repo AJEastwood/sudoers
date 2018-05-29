@@ -53,6 +53,18 @@
      shell: "grep -v '/etc/sudoers' {{ MD5FILE }} > {{ MD5FILE }}.tmp ; {{ csbin }} /etc/sudoers >> {{ MD5FILE }} ; mv {{ MD5FILE }}.tmp {{ MD5FILE }}"
      when: sudochg.changed or MD5STAT.exists == false
 
+   - name: List /etc/sudoers.*~ files  
+     shell: "ls -t /etc/sudoers*~  |tail -n +4"
+     register: LIST_SUDOERS
+     changed_when: false
+      
+   - name: Cleanup /etc/sudoers.*~ files  
+     file:
+       path: "{{ item }}"
+       state: absent
+     loop: "{{ LIST_SUDOERS.stdout_lines }}"
+     when: LIST_SUDOERS.stdout_lines != ""
+
    - name: Ensure MD5FILE permissions
      file:
        path: "{{ MD5FILE }}"
