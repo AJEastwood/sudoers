@@ -64,6 +64,17 @@
      when: sudochg.changed or MD5STAT.exists == false
 
    ##
+   # Ensure ownership & permissions on checksum file
+   ##
+   - name: Ensure MD5FILE permissions
+     file:
+       path: "{{ MD5FILE }}"
+       owner: root
+       group: "{{ sysgroup }}"
+       mode: 0600
+       state: file
+
+   ##
    # List and clean up backup files.  Retain 3 copies.
    ##
    - name: List /etc/sudoers.*~ files  
@@ -78,17 +89,6 @@
      loop: "{{ LIST_SUDOERS.stdout_lines }}"
      when: LIST_SUDOERS.stdout_lines != ""
 
-   ##
-   # Ensure ownership & permissions on checksum file
-   ##
-   - name: Ensure MD5FILE permissions
-     file:
-       path: "{{ MD5FILE }}"
-       owner: root
-       group: "{{ sysgroup }}"
-       mode: 0600
-       state: file
-  ##
   # This conditional restricts what hosts this block runs on
   ##
   when: parhost != EXCLUDE
