@@ -40,8 +40,17 @@
        path: "{{ MD5FILE }}"
      register: MD5STAT
 
+   - name: Ensure MD5FILE 
+     file:
+       path: "{{ MD5FILE }}"
+       owner: root
+       group: "{{ sysgroup }}"
+       mode: 0600
+       state: touch
+     when: MD5STAT.exists == false
+
    - name: sudoers checksum
-     shell: "{{ csbin }} /etc/sudoers >> {{ MD5FILE }}"
+     shell: "grep -v '/etc/sudoers' {{ MD5FILE }} > {{ MD5FILE }}.tmp ; {{ csbin }} /etc/sudoers >> {{ MD5FILE }} ; mv {{ MD5FILE }}.tmp {{ MD5FILE }}"
      when: sudochg.changed or MD5STAT.exists == false
 
    - name: Ensure MD5FILE permissions
