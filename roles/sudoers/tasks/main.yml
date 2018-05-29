@@ -12,6 +12,9 @@
   set_fact:
     csbin: "{{ 'cksum' if (ansible_distribution == 'RedHat') else 'csum' }}"
 
+##
+# Conditionally set name of root group
+##
 - name: "set system group"
   set_fact:
     sysgroup: "{{ 'root' if (ansible_distribution == 'RedHat') else 'sys' }}"
@@ -35,6 +38,10 @@
        validate: /usr/sbin/visudo -cf %s
      register: sudochg
    
+   ##
+   # Check for missing checksum file and touch if missing.
+   # This avoids errors if sudoers file does not change.
+   ##  
    - name: "Check for checksum file"
      stat:
        path: "{{ MD5FILE }}"
@@ -49,10 +56,16 @@
        state: touch
      when: MD5STAT.exists == false
 
+   ##
+   # Retain logic from script as other files may be listed.
+   ##
    - name: sudoers checksum
      shell: "grep -v '/etc/sudoers' {{ MD5FILE }} > {{ MD5FILE }}.tmp ; {{ csbin }} /etc/sudoers >> {{ MD5FILE }} ; mv {{ MD5FILE }}.tmp {{ MD5FILE }}"
      when: sudochg.changed or MD5STAT.exists == false
 
+   ##
+   # List and clean up backup files.  Retain 3 copies.
+   ##
    - name: List /etc/sudoers.*~ files  
      shell: "ls -t /etc/sudoers*~  |tail -n +4"
      register: LIST_SUDOERS
@@ -65,6 +78,9 @@
      loop: "{{ LIST_SUDOERS.stdout_lines }}"
      when: LIST_SUDOERS.stdout_lines != ""
 
+   ##
+   # Ensure ownership & permissions on checksum file
+   ##
    - name: Ensure MD5FILE permissions
      file:
        path: "{{ MD5FILE }}"
