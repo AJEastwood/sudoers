@@ -6,3 +6,4 @@
 - hosts: all
   roles:
     - sudoers
+...
