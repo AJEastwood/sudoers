@@ -12,6 +12,10 @@
   set_fact:
     csbin: "{{ 'cksum' if (ansible_distribution == 'RedHat') else 'csum' }}"
 
+- name: "set system group"
+  set_fact:
+    sysgroup: "{{ 'root' if (ansible_distribution == 'RedHat') else 'sys' }}"
+
 ##
 # Enclose in block so we can use parhost to exclude hosts
 ##
@@ -25,21 +29,26 @@
        src: sudoers.j2
        dest: /etc/sudoers
        owner: root
-       group: root
+       group: "{{ sysgroup }}"
        mode: 0440
        backup: yes
        validate: /usr/sbin/visudo -cf %s
      register: sudochg
+   
+   - name: "Check for checksum file"
+     stat:
+       path: "{{ MD5FILE }}"
+     register: MD5STAT
 
    - name: sudoers checksum
      shell: "{{ csbin }} /etc/sudoers >> {{ MD5FILE }}"
-     when: sudochg.changed
+     when: sudochg.changed or MD5STAT.exists == false
 
    - name: Ensure MD5FILE permissions
      file:
        path: "{{ MD5FILE }}"
        owner: root
-       group: root
+       group: "{{ sysgroup }}"
        mode: 0600
        state: file
   ##
