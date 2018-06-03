@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  author: Allen Eastwood
+  description: Sample Ansible role for managing a centralized sudoers file
+  company: ""
+  license: ""
+  min_ansible_version: 2.0
+  platforms:
+  - name: EL
+    versions:
+    - all
+  - name: Debian
+    versions:
+    - all
+  - name: Ubuntu
+    versions:
+    - all
+  galaxy_tags:
+    - sudo  
+    - sudoers
+    - user management
+    - access control
+dependencies: ""
