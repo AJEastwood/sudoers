@@ -1,0 +1,94 @@
+---
+##
+# Parse hostnames to grab 1st 2 characters
+##
+- name: "Parse hostname's 1st 2 characters"
+  set_fact: parhost={{ ansible_hostname[0:2] }}
+
+##
+# Conditionally set name of checksum binary
+##
+- name: "set checksum binary"
+  set_fact:
+    csbin: "{{ 'cksum' if (ansible_distribution == 'RedHat') else 'csum' }}"
+
+##
+# Conditionally set name of root group
+##
+- name: "set system group"
+  set_fact:
+    sysgroup: "{{ 'root' if (ansible_distribution == 'RedHat') else 'sys' }}"
+
+##
+# Enclose in block so we can use parhost to exclude hosts
+##
+- block:
+    ##
+    # Validate will prevent bad files, no need to revert
+    # Jinja2 template will add include line
+    ##
+    - name: Ensure sudoers file
+      template:
+        src: sudoers.j2
+        dest: /etc/sudoers
+        owner: root
+        group: "{{ sysgroup }}"
+        mode: 0440
+        backup: true
+        validate: /usr/sbin/visudo -cf %s
+      register: sudochg
+
+    ##
+    # Check for missing checksum file and touch if missing.
+    # This avoids errors if sudoers file does not change.
+    ##
+    - name: "Check for checksum file"
+      stat:
+        path: "{{ MD5FILE }}"
+      register: MD5STAT
+
+    - name: Ensure MD5FILE
+      file:
+        path: "{{ MD5FILE }}"
+        owner: root
+        group: "{{ sysgroup }}"
+        mode: 0600
+        state: touch
+      when: MD5STAT.exists == false
+
+    ##
+    # Retain logic from script as other files may be listed.
+    ##
+    - name: sudoers checksum
+      shell: "grep -v '/etc/sudoers' {{ MD5FILE }} > {{ MD5FILE }}.tmp ; {{ csbin }} /etc/sudoers >> {{ MD5FILE }} ; mv {{ MD5FILE }}.tmp {{ MD5FILE }}"
+      when: sudochg.changed or MD5STAT.exists == false
+
+    ##
+    # Ensure ownership & permissions on checksum file
+    ##
+    - name: Ensure MD5FILE permissions
+      file:
+        path: "{{ MD5FILE }}"
+        owner: root
+        group: "{{ sysgroup }}"
+        mode: 0600
+        state: file
+
+    ##
+    # List and clean up backup files.  Retain 3 copies.
+    ##
+    - name: List /etc/sudoers.*~ files
+      shell: "ls -t /etc/sudoers*~  |tail -n +4"
+      register: LIST_SUDOERS
+      changed_when: false
+
+    - name: Cleanup /etc/sudoers.*~ files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{ LIST_SUDOERS.stdout_lines }}"
+      when: LIST_SUDOERS.stdout_lines != ""
+
+  # This conditional restricts what hosts this block runs on
+  ##
+  when: parhost != EXCLUDE
