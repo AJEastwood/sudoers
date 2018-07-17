@@ -3,7 +3,8 @@
 # Parse hostnames to grab 1st 2 characters
 ##
 - name: "Parse hostname's 1st 2 characters"
-  set_fact: parhost={{ ansible_hostname[0:2] }}
+  set_fact:
+    parhost: "{{ ansible_hostname[0:2] }}"
 
 ##
 # Conditionally set name of checksum binary
